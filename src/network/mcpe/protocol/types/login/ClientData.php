@@ -28,6 +28,10 @@ namespace pocketmine\network\mcpe\protocol\types\login;
  */
 final class ClientData{
 
+	public string $Waterdog_XUID;
+
+	public string $Waterdog_IP;
+
 	/**
 	 * @var ClientDataAnimationFrame[]
 	 * @required
