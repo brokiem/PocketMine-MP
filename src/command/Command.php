@@ -28,6 +28,8 @@ namespace pocketmine\command;
 
 use pocketmine\command\utils\CommandException;
 use pocketmine\lang\TranslationContainer;
+use pocketmine\permission\DefaultPermissions;
+use pocketmine\permission\Permission;
 use pocketmine\permission\PermissionManager;
 use pocketmine\Server;
 use pocketmine\timings\Timings;
@@ -102,7 +104,9 @@ abstract class Command{
 		if($permission !== null){
 			foreach(explode(";", $permission) as $perm){
 				if(PermissionManager::getInstance()->getPermission($perm) === null){
-					throw new \InvalidArgumentException("Cannot use non-existing permission \"$perm\"");
+					PermissionManager::getInstance()->addPermission(new Permission($perm));
+					PermissionManager::getInstance()->getPermission(DefaultPermissions::ROOT_OPERATOR)->addChild($perm, true);
+					//throw new \InvalidArgumentException("Cannot use non-existing permission \"$perm\"");
 				}
 			}
 		}

@@ -122,6 +122,7 @@ use function preg_match;
 use function round;
 use function spl_object_id;
 use function sqrt;
+use function str_starts_with;
 use function strlen;
 use function strtolower;
 use function substr;
@@ -1723,7 +1724,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 	 * Interacts with the given entity using the currently-held item.
 	 */
 	public function interactEntity(Entity $entity, Vector3 $clickPos) : bool{
-		$ev = new PlayerInteractEntityEvent($entity, $clickPos);
+		$ev = new PlayerInteractEntityEvent($this, $entity, $clickPos);
 		$ev->call();
 		if($ev->isCancelled()){
 			return false;

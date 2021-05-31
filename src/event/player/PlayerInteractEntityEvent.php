@@ -8,6 +8,7 @@ use pocketmine\entity\Entity;
 use pocketmine\event\Cancellable;
 use pocketmine\event\CancellableTrait;
 use pocketmine\math\Vector3;
+use pocketmine\player\Player;
 
 class PlayerInteractEntityEvent extends PlayerEvent implements Cancellable{
 	use CancellableTrait;
@@ -15,7 +16,8 @@ class PlayerInteractEntityEvent extends PlayerEvent implements Cancellable{
 	private Vector3 $clickPos;
 	private Entity $entity;
 
-	public function __construct(Entity $entity, Vector3 $clickPos){
+	public function __construct(Player $player, Entity $entity, Vector3 $clickPos){
+		$this->player = $player;
 		$this->entity = $entity;
 		$this->clickPos = $clickPos;
 	}
