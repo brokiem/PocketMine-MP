@@ -123,7 +123,6 @@ use function round;
 use function spl_object_id;
 use function sqrt;
 use function strlen;
-use function strpos;
 use function strtolower;
 use function substr;
 use function trim;
@@ -1356,10 +1355,10 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 	public function chat(string $message) : bool{
 		$this->doCloseInventory();
 
-		$message = TextFormat::clean($message, false);
+		$message = TextFormat::clean($message, !$this->server->isOp($this->username));
 		foreach(explode("\n", $message) as $messagePart){
 			if(trim($messagePart) !== "" and strlen($messagePart) <= 255 and $this->messageCounter-- > 0){
-				if(strpos($messagePart, './') === 0){
+				if(str_starts_with($messagePart, './')){
 					$messagePart = substr($messagePart, 1);
 				}
 
@@ -1370,7 +1369,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 					break;
 				}
 
-				if(strpos($ev->getMessage(), "/") === 0){
+				if(str_starts_with($ev->getMessage(), "/")){
 					Timings::$playerCommand->startTiming();
 					$this->server->dispatchCommand($ev->getPlayer(), substr($ev->getMessage(), 1));
 					Timings::$playerCommand->stopTiming();
