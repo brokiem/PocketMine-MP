@@ -54,6 +54,7 @@ use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\event\player\PlayerDisplayNameChangeEvent;
 use pocketmine\event\player\PlayerExhaustEvent;
 use pocketmine\event\player\PlayerGameModeChangeEvent;
+use pocketmine\event\player\PlayerInteractEntityEvent;
 use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerItemConsumeEvent;
 use pocketmine\event\player\PlayerItemHeldEvent;
@@ -1723,8 +1724,12 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 	 * Interacts with the given entity using the currently-held item.
 	 */
 	public function interactEntity(Entity $entity, Vector3 $clickPos) : bool{
-		//TODO
-		return false;
+		$ev = new PlayerInteractEntityEvent($entity, $clickPos);
+		$ev->call();
+		if($ev->isCancelled()){
+			return false;
+		}
+		return true;
 	}
 
 	public function toggleSprint(bool $sprint) : bool{
