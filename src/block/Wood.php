@@ -23,7 +23,6 @@ declare(strict_types=1);
 
 namespace pocketmine\block;
 
-use brokiem\vanillapm4\VanillaPM4;
 use pocketmine\block\utils\TreeType;
 use pocketmine\item\Axe;
 use pocketmine\item\Item;
