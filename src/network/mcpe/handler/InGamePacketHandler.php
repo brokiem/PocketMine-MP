@@ -109,7 +109,6 @@ use function max;
 use function microtime;
 use function preg_match;
 use function strlen;
-use function strpos;
 use function substr;
 use function trim;
 
@@ -719,7 +718,7 @@ class InGamePacketHandler extends PacketHandler{
 	}
 
 	public function handleCommandRequest(CommandRequestPacket $packet) : bool{
-		if(strpos($packet->command, '/') === 0){
+		if(str_starts_with($packet->command, '/')){
 			$this->player->chat($packet->command);
 			return true;
 		}

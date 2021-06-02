@@ -43,7 +43,6 @@ use function is_string;
 use function mkdir;
 use function rtrim;
 use function stream_copy_to_stream;
-use function strpos;
 use function strtolower;
 use function trim;
 
@@ -165,7 +164,7 @@ abstract class PluginBase implements Plugin, CommandExecutor{
 		$pluginCmds = [];
 
 		foreach($this->getDescription()->getCommands() as $key => $data){
-			if(strpos($key, ":") !== false){
+			if(str_contains($key, ":")){
 				$this->logger->error($this->server->getLanguage()->translateString("pocketmine.plugin.commandError", [$key, $this->getDescription()->getFullName()]));
 				continue;
 			}
@@ -182,7 +181,7 @@ abstract class PluginBase implements Plugin, CommandExecutor{
 				if(isset($data["aliases"]) and is_array($data["aliases"])){
 					$aliasList = [];
 					foreach($data["aliases"] as $alias){
-						if(strpos($alias, ":") !== false){
+						if(str_contains($alias, ":")){
 							$this->logger->error($this->server->getLanguage()->translateString("pocketmine.plugin.aliasError", [$alias, $this->getDescription()->getFullName()]));
 							continue;
 						}

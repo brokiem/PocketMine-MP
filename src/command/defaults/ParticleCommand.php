@@ -69,7 +69,6 @@ use function explode;
 use function max;
 use function microtime;
 use function mt_rand;
-use function strpos;
 use function strtolower;
 
 class ParticleCommand extends VanillaCommand{
@@ -207,17 +206,17 @@ class ParticleCommand extends VanillaCommand{
 				return new EntityFlameParticle();
 		}
 
-		if(strpos($name, "iconcrack_") === 0){
+		if(str_starts_with($name, "iconcrack_")){
 			$d = explode("_", $name);
 			if(count($d) === 3){
 				return new ItemBreakParticle(ItemFactory::getInstance()->get((int) $d[1], (int) $d[2]));
 			}
-		}elseif(strpos($name, "blockcrack_") === 0){
+		}elseif(str_starts_with($name, "blockcrack_")){
 			$d = explode("_", $name);
 			if(count($d) === 2){
 				return new TerrainParticle(BlockFactory::getInstance()->get(((int) $d[1]) & 0xff, ((int) $d[1]) >> 12));
 			}
-		}elseif(strpos($name, "blockdust_") === 0){
+		}elseif(str_starts_with($name, "blockdust_")){
 			$d = explode("_", $name);
 			if(count($d) >= 4){
 				return new DustParticle(new Color(((int) $d[1]) & 0xff, ((int) $d[2]) & 0xff, ((int) $d[3]) & 0xff, isset($d[4]) ? ((int) $d[4]) & 0xff : 255));

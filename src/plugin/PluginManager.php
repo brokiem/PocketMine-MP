@@ -57,7 +57,6 @@ use function iterator_to_array;
 use function mkdir;
 use function shuffle;
 use function stripos;
-use function strpos;
 use function strtolower;
 use const DIRECTORY_SEPARATOR;
 
@@ -258,7 +257,7 @@ class PluginManager{
 					$this->server->getLogger()->error($this->server->getLanguage()->translateString("pocketmine.plugin.loadError", [$name, "%pocketmine.plugin.restrictedName"]));
 					continue;
 				}
-				if(strpos($name, " ") !== false){
+				if(str_contains($name, " ")){
 					$this->server->getLogger()->warning($this->server->getLanguage()->translateString("pocketmine.plugin.spacesDiscouraged", [$name]));
 				}
 

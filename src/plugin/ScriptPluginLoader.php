@@ -26,9 +26,6 @@ namespace pocketmine\plugin;
 use function file;
 use function is_file;
 use function preg_match;
-use function strlen;
-use function strpos;
-use function substr;
 use function trim;
 use const FILE_IGNORE_NEW_LINES;
 use const FILE_SKIP_EMPTY_LINES;
@@ -41,7 +38,7 @@ class ScriptPluginLoader implements PluginLoader{
 
 	public function canLoadPlugin(string $path) : bool{
 		$ext = ".php";
-		return is_file($path) and substr($path, -strlen($ext)) === $ext;
+		return is_file($path) and str_ends_with($path, $ext);
 	}
 
 	/**
@@ -64,7 +61,7 @@ class ScriptPluginLoader implements PluginLoader{
 
 		$insideHeader = false;
 		foreach($content as $line){
-			if(!$insideHeader and strpos($line, "/**") !== false){
+			if(!$insideHeader and str_contains($line, "/**")){
 				$insideHeader = true;
 			}
 
@@ -79,7 +76,7 @@ class ScriptPluginLoader implements PluginLoader{
 				$data[$key] = $content;
 			}
 
-			if($insideHeader and strpos($line, "*/") !== false){
+			if($insideHeader and str_contains($line, "*/")){
 				break;
 			}
 		}

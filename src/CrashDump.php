@@ -292,7 +292,7 @@ class CrashDump{
 
 	private function determinePluginFromFile(string $filePath, bool $crashFrame) : bool{
 		$frameCleanPath = Filesystem::cleanPath($filePath);
-		if(strpos($frameCleanPath, Filesystem::CLEAN_PATH_SRC_PREFIX) !== 0){
+		if(!str_starts_with($frameCleanPath, Filesystem::CLEAN_PATH_SRC_PREFIX)){
 			$this->addLine();
 			if($crashFrame){
 				$this->addLine("THIS CRASH WAS CAUSED BY A PLUGIN");
@@ -308,7 +308,7 @@ class CrashDump{
 				$file->setAccessible(true);
 				foreach($this->server->getPluginManager()->getPlugins() as $plugin){
 					$filePath = Filesystem::cleanPath($file->getValue($plugin));
-					if(strpos($frameCleanPath, $filePath) === 0){
+					if(str_starts_with($frameCleanPath, $filePath)){
 						$this->data["plugin"] = $plugin->getName();
 						$this->addLine("BAD PLUGIN: " . $plugin->getDescription()->getFullName());
 						break;

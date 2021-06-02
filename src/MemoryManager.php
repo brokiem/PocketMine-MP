@@ -132,20 +132,11 @@ class MemoryManager{
 			if($m <= 0){
 				$defaultMemory = 0;
 			}else{
-				switch(mb_strtoupper($matches[2])){
-					case "K":
-						$defaultMemory = $m / 1024;
-						break;
-					case "M":
-						$defaultMemory = $m;
-						break;
-					case "G":
-						$defaultMemory = $m * 1024;
-						break;
-					default:
-						$defaultMemory = $m;
-						break;
-				}
+				$defaultMemory = match (mb_strtoupper($matches[2])) {
+					"K" => $m / 1024,
+					"G" => $m * 1024,
+					default => $m,
+				};
 			}
 		}
 

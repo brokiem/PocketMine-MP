@@ -30,8 +30,8 @@ use pocketmine\entity\effect\EffectInstance;
 use pocketmine\entity\Entity;
 use pocketmine\entity\Human;
 use pocketmine\entity\Living;
-use pocketmine\event\player\SessionDisconnectEvent;
 use pocketmine\event\player\PlayerDuplicateLoginEvent;
+use pocketmine\event\player\SessionDisconnectEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\form\Form;
@@ -381,7 +381,7 @@ class NetworkSession{
 				}
 			}
 		}catch(PacketDecodeException $e){
-			if(strpos($e->getMessage(), "Reached limit of 500 packets in a single batch") === false){
+			if(!str_contains($e->getMessage(), "Reached limit of 500 packets in a single batch")){
 				$this->logger->logException($e);
 			}
 			throw PacketHandlingException::wrap($e, "Packet batch decode error");

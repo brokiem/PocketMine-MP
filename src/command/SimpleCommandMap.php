@@ -74,7 +74,6 @@ use function min;
 use function preg_match_all;
 use function strcasecmp;
 use function stripslashes;
-use function strpos;
 use function strtolower;
 use function trim;
 
@@ -276,7 +275,7 @@ class SimpleCommandMap implements CommandMap{
 		$values = $this->server->getCommandAliases();
 
 		foreach($values as $alias => $commandStrings){
-			if(strpos($alias, ":") !== false){
+			if(str_contains($alias, ":")){
 				$this->server->getLogger()->warning($this->server->getLanguage()->translateString("pocketmine.command.alias.illegal", [$alias]));
 				continue;
 			}
