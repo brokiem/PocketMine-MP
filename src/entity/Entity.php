@@ -612,7 +612,12 @@ abstract class Entity{
 
 		$changedProperties = $this->getDirtyNetworkData(ProtocolInfo::CURRENT_PROTOCOL);
 		if(count($changedProperties) > 0){
-			foreach(EntityMetadataCollection::sortByProtocol($this->hasSpawned) as $protocolId => $players){
+			$targets = $this->getViewers();
+			if($this instanceof Player){
+				$targets[] = $this;
+			}
+
+			foreach(EntityMetadataCollection::sortByProtocol($targets) as $protocolId => $players){
 				$this->sendData($players, $protocolId === ProtocolInfo::CURRENT_PROTOCOL ? $changedProperties : $this->getDirtyNetworkData($protocolId));
 			}
 			$this->networkProperties->clearDirtyProperties();
