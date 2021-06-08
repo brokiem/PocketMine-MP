@@ -677,11 +677,11 @@ class PacketSerializer extends BinaryStream{
 		$this->putByte((int) ($rotation / (360 / 256)));
 	}
 
-	private function readGameRule(int $type) : GameRule{
+	private function readGameRule(int $type, bool $isPlayerModifiable) : GameRule{
 		switch($type){
-			case GameRuleType::BOOL: return BoolGameRule::decode($this);
-			case GameRuleType::INT: return IntGameRule::decode($this);
-			case GameRuleType::FLOAT: return FloatGameRule::decode($this);
+			case GameRuleType::BOOL: return BoolGameRule::decode($this, $isPlayerModifiable);
+			case GameRuleType::INT: return IntGameRule::decode($this, $isPlayerModifiable);
+			case GameRuleType::FLOAT: return FloatGameRule::decode($this, $isPlayerModifiable);
 			default:
 				throw new PacketDecodeException("Unknown gamerule type $type");
 		}
@@ -701,8 +701,13 @@ class PacketSerializer extends BinaryStream{
 		$rules = [];
 		for($i = 0; $i < $count; ++$i){
 			$name = $this->getString();
+			if($this->getProtocolId() >= ProtocolInfo::PROTOCOL_1_17_0){
+				$isPlayerModifiable = $this->getBool();
+			}else{
+				$isPlayerModifiable = false;
+			}
 			$type = $this->getUnsignedVarInt();
-			$rules[$name] = $this->readGameRule($type);
+			$rules[$name] = $this->readGameRule($type, $isPlayerModifiable);
 		}
 
 		return $rules;
@@ -718,6 +723,9 @@ class PacketSerializer extends BinaryStream{
 		$this->putUnsignedVarInt(count($rules));
 		foreach($rules as $name => $rule){
 			$this->putString($name);
+			if($this->getProtocolId() >= ProtocolInfo::PROTOCOL_1_17_0){
+				$this->putBool($rule->isPlayerModifiable());
+			}
 			$this->putUnsignedVarInt($rule->getType());
 			$rule->encode($this);
 		}

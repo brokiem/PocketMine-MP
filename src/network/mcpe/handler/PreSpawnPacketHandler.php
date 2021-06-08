@@ -38,6 +38,8 @@ use pocketmine\network\mcpe\protocol\types\PlayerMovementType;
 use pocketmine\network\mcpe\protocol\types\SpawnSettings;
 use pocketmine\player\Player;
 use pocketmine\Server;
+use pocketmine\VersionInfo;
+use function sprintf;
 
 /**
  * Handler used for the pre-spawn phase of the session.
@@ -58,6 +60,7 @@ class PreSpawnPacketHandler extends PacketHandler{
 	}
 
 	public function setUp() : void{
+		$dictionaryProtocol = GlobalItemTypeDictionary::getDictionaryProtocol($this->session->getProtocolId());
 		$spawnPosition = $this->player->getSpawn();
 		$location = $this->player->getLocation();
 
@@ -82,13 +85,14 @@ class PreSpawnPacketHandler extends PacketHandler{
 		$pk->lightningLevel = 0;
 		$pk->commandsEnabled = true;
 		$pk->gameRules = [
-			"naturalregeneration" => new BoolGameRule(false) //Hack for client side regeneration
+			"naturalregeneration" => new BoolGameRule(false, false) //Hack for client side regeneration
 		];
 		$pk->experiments = new Experiments([], false);
 		$pk->levelId = "";
 		$pk->worldName = $this->server->getMotd();
-		$pk->itemTable = GlobalItemTypeDictionary::getInstance()->getDictionary()->getEntries(); //TODO: check if this is actually needed
+		$pk->itemTable = GlobalItemTypeDictionary::getInstance()->getDictionary($dictionaryProtocol)->getEntries(); //TODO: check if this is actually needed
 		$pk->playerMovementSettings = new PlayerMovementSettings(PlayerMovementType::LEGACY, 0, false);
+		$pk->serverSoftwareVersion = "NetherGames v4.0";
 		$this->session->sendDataPacket($pk);
 
 		$this->session->sendDataPacket(StaticPacketCache::getInstance()->getAvailableActorIdentifiers());
@@ -104,7 +108,7 @@ class PreSpawnPacketHandler extends PacketHandler{
 		$this->session->getInvManager()->syncAll();
 		$this->session->getInvManager()->syncCreative();
 		$this->session->getInvManager()->syncSelectedHotbarSlot();
-		$this->session->sendDataPacket(CraftingDataCache::getInstance()->getCache($this->server->getCraftingManager()));
+		$this->session->sendDataPacket(CraftingDataCache::getInstance()->getCache($dictionaryProtocol, $this->server->getCraftingManager()));
 
 		$this->session->syncPlayerList($this->server->getOnlinePlayers());
 	}
