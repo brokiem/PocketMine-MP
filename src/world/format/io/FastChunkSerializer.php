@@ -94,7 +94,6 @@ final class FastChunkSerializer{
 		$terrainPopulated = (bool) ($flags & self::FLAG_POPULATED);
 
 		$subChunks = [];
-		$biomeIds = null;
 		$heightMap = null;
 
 		$count = $stream->getByte();

@@ -13,6 +13,7 @@ use pocketmine\block\utils\TreeType;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\data\bedrock\DyeColorIdMap;
 use pocketmine\data\bedrock\EntityLegacyIds;
+use pocketmine\data\bedrock\PotionTypeIdMap;
 use pocketmine\entity\Entity;
 use pocketmine\entity\Location;
 use pocketmine\entity\Squid;
@@ -258,9 +259,10 @@ class ItemFactory{
 			))->setColor($color));
 		}
 
-		foreach(Potion::ALL as $type){
-			$this->register(new Potion(new ItemIdentifier(ItemIds::POTION, $type), "Potion", $type));
-			$this->register(new SplashPotion(new ItemIdentifier(ItemIds::SPLASH_POTION, $type), "Splash Potion", $type));
+		foreach(PotionType::getAll() as $type){
+			$typeId = PotionTypeIdMap::getInstance()->toId($type);
+			$this->register(new Potion(new ItemIdentifier(ItemIds::POTION, $typeId), "Potion", $type));
+			$this->register(new SplashPotion(new ItemIdentifier(ItemIds::SPLASH_POTION, $typeId), "Splash Potion", $type));
 		}
 
 		foreach(TreeType::getAll() as $type){

@@ -117,9 +117,9 @@ class Leaves extends Transparent{
 		return parent::place($tx, $item, $blockReplace, $blockClicked, $face, $clickVector, $player);
 	}
 
-	public function getDrops(Item $item) : array{
+	public function getDropsForCompatibleTool(Item $item) : array{
 		if(($item->getBlockToolType() & BlockToolType::SHEARS) !== 0){
-			return $this->getDropsForCompatibleTool($item);
+			return parent::getDropsForCompatibleTool($item);
 		}
 
 		$drops = [];
@@ -131,6 +131,10 @@ class Leaves extends Transparent{
 		}
 
 		return $drops;
+	}
+
+	public function isAffectedBySilkTouch() : bool{
+		return true;
 	}
 
 	public function getFlameEncouragement() : int{

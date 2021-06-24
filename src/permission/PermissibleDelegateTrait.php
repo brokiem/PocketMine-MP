@@ -9,7 +9,7 @@ use pocketmine\utils\ObjectSet;
 
 trait PermissibleDelegateTrait{
 
-	/** @var PermissibleBase */
+	/** @var Permissible */
 	private $perm;
 
 	/**

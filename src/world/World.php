@@ -412,10 +412,10 @@ class World implements ChunkManager{
 		$this->time = $this->provider->getWorldData()->getTime();
 
 		$cfg = $this->server->getConfigGroup();
-		$this->chunkTickRadius = min($this->server->getViewDistance(), max(1, (int) $cfg->getProperty("chunk-ticking.tick-radius", 4)));
-		$this->chunksPerTick = (int) $cfg->getProperty("chunk-ticking.per-tick", 40);
-		$this->tickedBlocksPerSubchunkPerTick = (int) $cfg->getProperty("chunk-ticking.blocks-per-subchunk-per-tick", self::DEFAULT_TICKED_BLOCKS_PER_SUBCHUNK_PER_TICK);
-		$this->maxConcurrentChunkPopulationTasks = (int) $cfg->getProperty("chunk-generation.population-queue-size", 2);
+		$this->chunkTickRadius = min($this->server->getViewDistance(), max(1, $cfg->getPropertyInt("chunk-ticking.tick-radius", 4)));
+		$this->chunksPerTick = $cfg->getPropertyInt("chunk-ticking.per-tick", 40);
+		$this->tickedBlocksPerSubchunkPerTick = $cfg->getPropertyInt("chunk-ticking.blocks-per-subchunk-per-tick", self::DEFAULT_TICKED_BLOCKS_PER_SUBCHUNK_PER_TICK);
+		$this->maxConcurrentChunkPopulationTasks = $cfg->getPropertyInt("chunk-generation.population-queue-size", 2);
 
 		$dontTickBlocks = array_fill_keys($cfg->getProperty("chunk-ticking.disable-block-ticking", []), true);
 
@@ -1650,9 +1650,8 @@ class World implements ChunkManager{
 		$orbs = [];
 
 		foreach(ExperienceOrb::splitIntoOrbSizes($amount) as $split){
-			$orb = new ExperienceOrb(Location::fromObject($pos, $this, lcg_value() * 360, 0));
+			$orb = new ExperienceOrb(Location::fromObject($pos, $this, lcg_value() * 360, 0), $split);
 
-			$orb->setXpValue($split);
 			$orb->setMotion(new Vector3((lcg_value() * 0.2 - 0.1) * 2, lcg_value() * 0.4, (lcg_value() * 0.2 - 0.1) * 2));
 			$orb->spawnToAll();
 
@@ -1829,9 +1828,17 @@ class World implements ChunkManager{
 			return false;
 		}
 
-		foreach($hand->getCollisionBoxes() as $collisionBox){
-			if(count($this->getCollidingEntities($collisionBox)) > 0){
-				return false;  //Entity in block
+		$tx = new BlockTransaction($this);
+		if(!$hand->place($tx, $item, $blockReplace, $blockClicked, $face, $clickVector, $player)){
+			return false;
+		}
+
+		foreach($tx->getBlocks() as [$x, $y, $z, $block]){
+			$block->position($this, $x, $y, $z);
+			foreach($block->getCollisionBoxes() as $collisionBox){
+				if(count($entities = $this->getCollidingEntities($collisionBox)) > 0){
+					return false;  //Entity in block
+				}
 			}
 		}
 
@@ -1863,8 +1870,7 @@ class World implements ChunkManager{
 			}
 		}
 
-		$tx = new BlockTransaction($this);
-		if(!$hand->place($tx, $item, $blockReplace, $blockClicked, $face, $clickVector, $player) or !$tx->apply()){
+		if(!$tx->apply()){
 			return false;
 		}
 		foreach($tx->getBlocks() as [$x, $y, $z, $_]){

@@ -27,6 +27,7 @@ use function is_dir;
 use function is_resource;
 use function json_encode;
 use function json_last_error_msg;
+use function ksort;
 use function max;
 use function mb_strtoupper;
 use function microtime;
@@ -48,6 +49,7 @@ use const FILE_IGNORE_NEW_LINES;
 use const JSON_UNESCAPED_SLASHES;
 use const PHP_EOL;
 use const PHP_OS;
+use const SORT_STRING;
 
 class CrashDump{
 
@@ -146,7 +148,9 @@ class CrashDump{
 			$this->addLine();
 			$this->addLine("Loaded plugins:");
 			$this->data["plugins"] = [];
-			foreach($this->server->getPluginManager()->getPlugins() as $p){
+			$plugins = $this->server->getPluginManager()->getPlugins();
+			ksort($plugins, SORT_STRING);
+			foreach($plugins as $p){
 				$d = $p->getDescription();
 				$this->data["plugins"][$d->getName()] = [
 					"name" => $d->getName(),
@@ -168,7 +172,7 @@ class CrashDump{
 	private function extraData() : void{
 		global $argv;
 
-		if($this->server->getConfigGroup()->getProperty("auto-report.send-settings", true) !== false){
+		if($this->server->getConfigGroup()->getPropertyBool("auto-report.send-settings", true)){
 			$this->data["parameters"] = (array) $argv;
 			if(($serverDotProperties = @file_get_contents($this->server->getDataPath() . "server.properties")) !== false){
 				$this->data["server.properties"] = preg_replace("#^rcon\\.password=(.*)$#m", "rcon.password=******", $serverDotProperties);
@@ -191,7 +195,7 @@ class CrashDump{
 		}
 		$this->data["extensions"] = $extensions;
 
-		if($this->server->getConfigGroup()->getProperty("auto-report.send-phpinfo", true) !== false){
+		if($this->server->getConfigGroup()->getPropertyBool("auto-report.send-phpinfo", true)){
 			ob_start();
 			phpinfo();
 			$this->data["phpinfo"] = ob_get_contents();
@@ -253,7 +257,7 @@ class CrashDump{
 		$this->addLine("Code:");
 		$this->data["code"] = [];
 
-		if($this->server->getConfigGroup()->getProperty("auto-report.send-code", true) !== false and file_exists($error["fullFile"])){
+		if($this->server->getConfigGroup()->getPropertyBool("auto-report.send-code", true) and file_exists($error["fullFile"])){
 			$file = @file($error["fullFile"], FILE_IGNORE_NEW_LINES);
 			if($file !== false){
 				for($l = max(0, $error["line"] - 10); $l < $error["line"] + 10 and isset($file[$l]); ++$l){

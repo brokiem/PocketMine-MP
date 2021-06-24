@@ -36,7 +36,7 @@ class AutoUpdater{
 		$this->logger = new \PrefixedLogger($server->getLogger(), "Auto Updater");
 		$this->endpoint = "http://$endpoint/api/";
 
-		if((bool) $server->getConfigGroup()->getProperty("auto-updater.enabled", true)){
+		if($server->getConfigGroup()->getPropertyBool("auto-updater.enabled", true)){
 			$this->doCheck();
 		}
 	}
@@ -53,7 +53,7 @@ class AutoUpdater{
 		$this->checkUpdate();
 		if($this->hasUpdate()){
 			(new UpdateNotifyEvent($this))->call();
-			if((bool) $this->server->getConfigGroup()->getProperty("auto-updater.on-update.warn-console", true)){
+			if($this->server->getConfigGroup()->getPropertyBool("auto-updater.on-update.warn-console", true)){
 				$this->showConsoleUpdate();
 			}
 		}else{
@@ -159,7 +159,7 @@ class AutoUpdater{
 	 * Returns the channel used for update checking (stable, beta, dev)
 	 */
 	public function getChannel() : string{
-		$channel = strtolower($this->server->getConfigGroup()->getProperty("auto-updater.preferred-channel", "stable"));
+		$channel = strtolower($this->server->getConfigGroup()->getPropertyString("auto-updater.preferred-channel", "stable"));
 		if($channel !== "stable" and $channel !== "beta" and $channel !== "alpha" and $channel !== "development"){
 			$channel = "stable";
 		}
