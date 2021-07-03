@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\command;
+namespace pocketmine\console;
 
 use pocketmine\snooze\SleeperNotifier;
 use pocketmine\thread\Thread;
@@ -11,7 +11,7 @@ use function microtime;
 use function preg_replace;
 use function usleep;
 
-final class CommandReaderThread extends Thread{
+final class ConsoleReaderThread extends Thread{
 	private \Threaded $buffer;
 	private ?SleeperNotifier $notifier;
 
@@ -44,7 +44,7 @@ final class CommandReaderThread extends Thread{
 		$buffer = $this->buffer;
 		$notifier = $this->notifier;
 
-		$reader = new CommandReader();
+		$reader = new ConsoleReader();
 		while(!$this->shutdown){
 			$line = $reader->readLine();
 

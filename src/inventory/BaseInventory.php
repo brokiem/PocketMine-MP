@@ -63,15 +63,7 @@ abstract class BaseInventory implements Inventory{
 			$this->viewers[$id] = $viewer;
 		}
 
-		foreach($this->listeners as $listener){
-			$listener->onContentChange($this, $oldContents);
-		}
-
-		foreach($this->getViewers() as $viewer){
-			if($viewer->isConnected()){
-				$viewer->getNetworkSession()->getInvManager()->syncContents($this);
-			}
-		}
+		$this->onContentChange($oldContents);
 	}
 
 	abstract protected function internalSetItem(int $index, Item $item) : void;
@@ -125,9 +117,11 @@ abstract class BaseInventory implements Inventory{
 			$listener->onSlotChange($this, $index, $before);
 		}
 		foreach($this->viewers as $viewer){
-			if($viewer->isConnected()){
-				$viewer->getNetworkSession()->getInvManager()->syncSlot($this, $index);
+			$invManager = $viewer->getNetworkSession()->getInvManager();
+			if($invManager === null){
+				continue;
 			}
+			$invManager->syncSlot($this, $index);
 		}
 	}
 
@@ -141,7 +135,11 @@ abstract class BaseInventory implements Inventory{
 		}
 
 		foreach($this->getViewers() as $viewer){
-			$viewer->getNetworkSession()->getInvManager()->syncContents($this);
+			$invManager = $viewer->getNetworkSession()->getInvManager();
+			if($invManager === null){
+				continue;
+			}
+			$invManager->syncContents($this);
 		}
 	}
 

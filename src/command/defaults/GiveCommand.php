@@ -8,9 +8,11 @@ use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\utils\InvalidCommandSyntaxException;
 use pocketmine\item\LegacyStringToItemParser;
+use pocketmine\lang\KnownTranslationKeys;
 use pocketmine\lang\TranslationContainer;
 use pocketmine\nbt\JsonNbtParser;
 use pocketmine\nbt\NbtDataException;
+use pocketmine\permission\DefaultPermissionNames;
 use pocketmine\utils\TextFormat;
 use function array_slice;
 use function count;
@@ -21,10 +23,10 @@ class GiveCommand extends VanillaCommand{
 	public function __construct(string $name){
 		parent::__construct(
 			$name,
-			"%pocketmine.command.give.description",
-			"%pocketmine.command.give.usage"
+			"%" . KnownTranslationKeys::POCKETMINE_COMMAND_GIVE_DESCRIPTION,
+			"%" . KnownTranslationKeys::POCKETMINE_COMMAND_GIVE_USAGE
 		);
-		$this->setPermission("pocketmine.command.give");
+		$this->setPermission(DefaultPermissionNames::COMMAND_GIVE);
 	}
 
 	public function execute(CommandSender $sender, string $commandLabel, array $args){

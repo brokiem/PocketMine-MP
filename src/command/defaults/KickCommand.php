@@ -7,7 +7,9 @@ namespace pocketmine\command\defaults;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\utils\InvalidCommandSyntaxException;
+use pocketmine\lang\KnownTranslationKeys;
 use pocketmine\lang\TranslationContainer;
+use pocketmine\permission\DefaultPermissionNames;
 use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
 use function array_shift;
@@ -20,10 +22,10 @@ class KickCommand extends VanillaCommand{
 	public function __construct(string $name){
 		parent::__construct(
 			$name,
-			"%pocketmine.command.kick.description",
-			"%commands.kick.usage"
+			"%" . KnownTranslationKeys::POCKETMINE_COMMAND_KICK_DESCRIPTION,
+			"%" . KnownTranslationKeys::COMMANDS_KICK_USAGE
 		);
-		$this->setPermission("pocketmine.command.kick");
+		$this->setPermission(DefaultPermissionNames::COMMAND_KICK);
 	}
 
 	public function execute(CommandSender $sender, string $commandLabel, array $args){
@@ -41,12 +43,12 @@ class KickCommand extends VanillaCommand{
 		if(($player = $sender->getServer()->getPlayerByPrefix($name)) instanceof Player){
 			$player->kick("Kicked by admin." . ($reason !== "" ? "Reason: " . $reason : ""));
 			if($reason !== ""){
-				Command::broadcastCommandMessage($sender, new TranslationContainer("commands.kick.success.reason", [$player->getName(), $reason]));
+				Command::broadcastCommandMessage($sender, new TranslationContainer(KnownTranslationKeys::COMMANDS_KICK_SUCCESS_REASON, [$player->getName(), $reason]));
 			}else{
-				Command::broadcastCommandMessage($sender, new TranslationContainer("commands.kick.success", [$player->getName()]));
+				Command::broadcastCommandMessage($sender, new TranslationContainer(KnownTranslationKeys::COMMANDS_KICK_SUCCESS, [$player->getName()]));
 			}
 		}else{
-			$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%commands.generic.player.notFound"));
+			$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%" . KnownTranslationKeys::COMMANDS_GENERIC_PLAYER_NOTFOUND));
 		}
 
 		return true;

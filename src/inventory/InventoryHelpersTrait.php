@@ -99,7 +99,7 @@ trait InventoryHelpersTrait{
 		$count = $item->getCount();
 		for($i = 0, $size = $this->getSize(); $i < $size; ++$i){
 			$slot = $this->getItem($i);
-			if($item->equals($slot)){
+			if($item->canStackWith($slot)){
 				if(($diff = min($slot->getMaxStackSize(), $item->getMaxStackSize()) - $slot->getCount()) > 0){
 					$count -= $diff;
 				}
@@ -147,7 +147,7 @@ trait InventoryHelpersTrait{
 				$emptySlots[] = $i;
 			}
 
-			if($slot->equals($item) and $item->getCount() < $item->getMaxStackSize()){
+			if($slot->canStackWith($item) and $item->getCount() < $item->getMaxStackSize()){
 				$amount = min($item->getMaxStackSize() - $item->getCount(), $slot->getCount(), $this->getMaxStackSize());
 				if($amount > 0){
 					$slot->setCount($slot->getCount() - $amount);
@@ -167,7 +167,9 @@ trait InventoryHelpersTrait{
 				$item = clone $slot;
 				$item->setCount($amount);
 				$this->setItem($slotIndex, $item);
-				break;
+				if($slot->getCount() <= 0){
+					break;
+				}
 			}
 		}
 

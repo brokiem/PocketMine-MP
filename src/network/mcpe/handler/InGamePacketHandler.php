@@ -22,6 +22,7 @@ use pocketmine\item\WrittenBook;
 use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\StringTag;
+use pocketmine\network\mcpe\convert\RuntimeBlockMapping;
 use pocketmine\network\mcpe\convert\SkinAdapterSingleton;
 use pocketmine\network\mcpe\convert\TypeConverter;
 use pocketmine\network\mcpe\InventoryManager;
@@ -123,9 +124,12 @@ class InGamePacketHandler extends PacketHandler{
 	 */
 	protected $openHardcodedWindows = [];
 
-	public function __construct(Player $player, NetworkSession $session){
+	private InventoryManager $inventoryManager;
+
+	public function __construct(Player $player, NetworkSession $session, InventoryManager $inventoryManager){
 		$this->player = $player;
 		$this->session = $session;
+		$this->inventoryManager = $inventoryManager;
 	}
 
 	public function handleText(TextPacket $packet) : bool{
@@ -204,7 +208,7 @@ class InGamePacketHandler extends PacketHandler{
 			$result = $this->handleNormalTransaction($packet->trData);
 		}elseif($packet->trData instanceof MismatchTransactionData){
 			$this->session->getLogger()->debug("Mismatch transaction received");
-			$this->session->getInvManager()->syncAll();
+			$this->inventoryManager->syncAll();
 			$result = true;
 		}elseif($packet->trData instanceof UseItemTransactionData){
 			$result = $this->handleUseItemTransaction($packet->trData);
@@ -215,7 +219,7 @@ class InGamePacketHandler extends PacketHandler{
 		}
 
 		if(!$result){
-			$this->session->getInvManager()->syncAll();
+			$this->inventoryManager->syncAll();
 		}
 		return $result;
 	}
@@ -245,7 +249,7 @@ class InGamePacketHandler extends PacketHandler{
 			}
 
 			try{
-				$action = $converter->createInventoryAction($this->session->getProtocolId(), $networkInventoryAction, $this->player);
+				$action = $converter->createInventoryAction($this->session->getProtocolId(), $networkInventoryAction, $this->player, $this->inventoryManager);
 				if($action !== null){
 					$actions[] = $action;
 				}
@@ -273,14 +277,14 @@ class InGamePacketHandler extends PacketHandler{
 				return true;
 			}
 			try{
-				$this->session->getInvManager()->onTransactionStart($this->craftingTransaction);
+				$this->inventoryManager->onTransactionStart($this->craftingTransaction);
 				$this->craftingTransaction->execute();
 			}catch(TransactionException $e){
 				$this->session->getLogger()->debug("Failed to execute crafting transaction: " . $e->getMessage());
 
 				//TODO: only sync slots that the client tried to change
 				foreach($this->craftingTransaction->getInventories() as $inventory){
-					$this->session->getInvManager()->syncContents($inventory);
+					$this->inventoryManager->syncContents($inventory);
 				}
 				/*
 				 * TODO: HACK!
@@ -308,7 +312,7 @@ class InGamePacketHandler extends PacketHandler{
 			}
 
 			$transaction = new InventoryTransaction($this->player, $actions);
-			$this->session->getInvManager()->onTransactionStart($transaction);
+			$this->inventoryManager->onTransactionStart($transaction);
 			try{
 				$transaction->execute();
 			}catch(TransactionException $e){
@@ -317,7 +321,7 @@ class InGamePacketHandler extends PacketHandler{
 				$logger->debug("Actions: " . json_encode($data->getActions()));
 
 				foreach($transaction->getInventories() as $inventory){
-					$this->session->getInvManager()->syncContents($inventory);
+					$this->inventoryManager->syncContents($inventory);
 				}
 
 				return false;
@@ -372,12 +376,12 @@ class InGamePacketHandler extends PacketHandler{
 			case UseItemTransactionData::ACTION_CLICK_AIR:
 				if($this->player->isUsingItem()){
 					if(!$this->player->consumeHeldItem()){
-						$this->session->getInvManager()->syncSlot($this->player->getInventory(), $this->player->getInventory()->getHeldItemIndex());
+						$this->inventoryManager->syncSlot($this->player->getInventory(), $this->player->getInventory()->getHeldItemIndex());
 					}
 					return true;
 				}
 				if(!$this->player->useHeldItem()){
-					$this->session->getInvManager()->syncSlot($this->player->getInventory(), $this->player->getInventory()->getHeldItemIndex());
+					$this->inventoryManager->syncSlot($this->player->getInventory(), $this->player->getInventory()->getHeldItemIndex());
 				}
 				return true;
 		}
@@ -389,7 +393,7 @@ class InGamePacketHandler extends PacketHandler{
 	 * Internal function used to execute rollbacks when an action fails on a block.
 	 */
 	private function onFailedBlockAction(Vector3 $blockPos, ?int $face) : void{
-		$this->session->getInvManager()->syncSlot($this->player->getInventory(), $this->player->getInventory()->getHeldItemIndex());
+		$this->inventoryManager->syncSlot($this->player->getInventory(), $this->player->getInventory()->getHeldItemIndex());
 		if($blockPos->distanceSquared($this->player->getLocation()) < 10000){
 			$blocks = $blockPos->sidesArray();
 			if($face !== null){
@@ -400,7 +404,7 @@ class InGamePacketHandler extends PacketHandler{
 			}else{
 				$blocks[] = $blockPos;
 			}
-			foreach($this->player->getWorld()->createBlockUpdatePackets($this->session->getProtocolId(), $blocks) as $packet){
+			foreach($this->player->getWorld()->createBlockUpdatePackets(RuntimeBlockMapping::getMappingProtocol($this->session->getProtocolId()), $blocks) as $packet){
 				$this->session->sendDataPacket($packet);
 			}
 		}
@@ -416,12 +420,12 @@ class InGamePacketHandler extends PacketHandler{
 		switch($data->getActionType()){
 			case UseItemOnEntityTransactionData::ACTION_INTERACT:
 				if(!$this->player->interactEntity($target, $data->getClickPos())){
-					$this->session->getInvManager()->syncSlot($this->player->getInventory(), $this->player->getInventory()->getHeldItemIndex());
+					$this->inventoryManager->syncSlot($this->player->getInventory(), $this->player->getInventory()->getHeldItemIndex());
 				}
 				return true;
 			case UseItemOnEntityTransactionData::ACTION_ATTACK:
 				if(!$this->player->attackEntity($target)){
-					$this->session->getInvManager()->syncSlot($this->player->getInventory(), $this->player->getInventory()->getHeldItemIndex());
+					$this->inventoryManager->syncSlot($this->player->getInventory(), $this->player->getInventory()->getHeldItemIndex());
 				}
 				return true;
 		}
@@ -434,7 +438,7 @@ class InGamePacketHandler extends PacketHandler{
 		switch($data->getActionType()){
 			case ReleaseItemTransactionData::ACTION_RELEASE:
 				if(!$this->player->releaseHeldItem()){
-					$this->session->getInvManager()->syncContents($this->player->getInventory());
+					$this->inventoryManager->syncContents($this->player->getInventory());
 				}
 				return true;
 		}
@@ -447,9 +451,9 @@ class InGamePacketHandler extends PacketHandler{
 			return true; //this happens when we put an item into the offhand
 		}
 		if($packet->windowId === ContainerIds::INVENTORY){
-			$this->session->getInvManager()->onClientSelectHotbarSlot($packet->hotbarSlot);
+			$this->inventoryManager->onClientSelectHotbarSlot($packet->hotbarSlot);
 			if(!$this->player->selectHotbarSlot($packet->hotbarSlot)){
-				$this->session->getInvManager()->syncSelectedHotbarSlot();
+				$this->inventoryManager->syncSelectedHotbarSlot();
 			}
 			return true;
 		}
@@ -583,7 +587,7 @@ class InGamePacketHandler extends PacketHandler{
 		if(array_key_exists($packet->windowId, $this->openHardcodedWindows)){
 			unset($this->openHardcodedWindows[$packet->windowId]);
 		}else{
-			$this->session->getInvManager()->onClientRemoveWindow($packet->windowId);
+			$this->inventoryManager->onClientRemoveWindow($packet->windowId);
 		}
 
 		$this->session->sendDataPacket(ContainerClosePacket::create($packet->windowId, false));
@@ -638,7 +642,7 @@ class InGamePacketHandler extends PacketHandler{
 
 				try{
 					if(!$block->updateText($this->player, $text)){
-						foreach($this->player->getWorld()->createBlockUpdatePackets($this->session->getProtocolId(), [$pos]) as $updatePacket){
+						foreach($this->player->getWorld()->createBlockUpdatePackets(RuntimeBlockMapping::getMappingProtocol($this->session->getProtocolId()), [$pos]) as $updatePacket){
 							$this->session->sendDataPacket($updatePacket);
 						}
 					}

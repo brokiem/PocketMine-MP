@@ -8,7 +8,9 @@ use pocketmine\command\CommandSender;
 use pocketmine\command\utils\InvalidCommandSyntaxException;
 use pocketmine\item\enchantment\EnchantmentInstance;
 use pocketmine\item\enchantment\VanillaEnchantments;
+use pocketmine\lang\KnownTranslationKeys;
 use pocketmine\lang\TranslationContainer;
+use pocketmine\permission\DefaultPermissionNames;
 use pocketmine\utils\TextFormat;
 use function count;
 
@@ -17,10 +19,10 @@ class EnchantCommand extends VanillaCommand{
 	public function __construct(string $name){
 		parent::__construct(
 			$name,
-			"%pocketmine.command.enchant.description",
-			"%commands.enchant.usage"
+			"%" . KnownTranslationKeys::POCKETMINE_COMMAND_ENCHANT_DESCRIPTION,
+			"%" . KnownTranslationKeys::COMMANDS_ENCHANT_USAGE
 		);
-		$this->setPermission("pocketmine.command.enchant");
+		$this->setPermission(DefaultPermissionNames::COMMAND_ENCHANT);
 	}
 
 	public function execute(CommandSender $sender, string $commandLabel, array $args){
@@ -35,21 +37,21 @@ class EnchantCommand extends VanillaCommand{
 		$player = $sender->getServer()->getPlayerByPrefix($args[0]);
 
 		if($player === null){
-			$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%commands.generic.player.notFound"));
+			$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%" . KnownTranslationKeys::COMMANDS_GENERIC_PLAYER_NOTFOUND));
 			return true;
 		}
 
 		$item = $player->getInventory()->getItemInHand();
 
 		if($item->isNull()){
-			$sender->sendMessage(new TranslationContainer("commands.enchant.noItem"));
+			$sender->sendMessage(new TranslationContainer(KnownTranslationKeys::COMMANDS_ENCHANT_NOITEM));
 			return true;
 		}
 
 		try{
 			$enchantment = VanillaEnchantments::fromString($args[1]);
 		}catch(\InvalidArgumentException $e){
-			$sender->sendMessage(new TranslationContainer("commands.enchant.notFound", [$args[1]]));
+			$sender->sendMessage(new TranslationContainer(KnownTranslationKeys::COMMANDS_ENCHANT_NOTFOUND, [$args[1]]));
 			return true;
 		}
 
@@ -64,7 +66,7 @@ class EnchantCommand extends VanillaCommand{
 		$item->addEnchantment(new EnchantmentInstance($enchantment, $level));
 		$player->getInventory()->setItemInHand($item);
 
-		self::broadcastCommandMessage($sender, new TranslationContainer("%commands.enchant.success", [$player->getName()]));
+		self::broadcastCommandMessage($sender, new TranslationContainer(KnownTranslationKeys::COMMANDS_ENCHANT_SUCCESS, [$player->getName()]));
 		return true;
 	}
 }

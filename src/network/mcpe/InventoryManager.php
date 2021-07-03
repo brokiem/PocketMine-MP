@@ -126,8 +126,8 @@ class InventoryManager{
 					$this->session->sendDataPacket($pk);
 				}
 				$this->syncContents($inventory);
+				return;
 			}
-			return;
 		}
 		throw new \UnsupportedOperationException("Unsupported inventory type");
 	}

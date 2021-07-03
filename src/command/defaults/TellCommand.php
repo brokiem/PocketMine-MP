@@ -7,7 +7,9 @@ namespace pocketmine\command\defaults;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\utils\InvalidCommandSyntaxException;
+use pocketmine\lang\KnownTranslationKeys;
 use pocketmine\lang\TranslationContainer;
+use pocketmine\permission\DefaultPermissionNames;
 use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
 use function array_shift;
@@ -19,11 +21,11 @@ class TellCommand extends VanillaCommand{
 	public function __construct(string $name){
 		parent::__construct(
 			$name,
-			"%pocketmine.command.tell.description",
-			"%commands.message.usage",
+			"%" . KnownTranslationKeys::POCKETMINE_COMMAND_TELL_DESCRIPTION,
+			"%" . KnownTranslationKeys::COMMANDS_MESSAGE_USAGE,
 			["w", "msg"]
 		);
-		$this->setPermission("pocketmine.command.tell");
+		$this->setPermission(DefaultPermissionNames::COMMAND_TELL);
 	}
 
 	public function execute(CommandSender $sender, string $commandLabel, array $args){
@@ -38,18 +40,18 @@ class TellCommand extends VanillaCommand{
 		$player = $sender->getServer()->getPlayerByPrefix(array_shift($args));
 
 		if($player === $sender){
-			$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%commands.message.sameTarget"));
+			$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%" . KnownTranslationKeys::COMMANDS_MESSAGE_SAMETARGET));
 			return true;
 		}
 
 		if($player instanceof Player){
 			$message = implode(" ", $args);
-			$sender->sendMessage(new TranslationContainer(TextFormat::GRAY . TextFormat::ITALIC . "%commands.message.display.outgoing", [$player->getDisplayName(), $message]));
+			$sender->sendMessage(new TranslationContainer(TextFormat::GRAY . TextFormat::ITALIC . "%" . KnownTranslationKeys::COMMANDS_MESSAGE_DISPLAY_OUTGOING, [$player->getDisplayName(), $message]));
 			$name = $sender instanceof Player ? $sender->getDisplayName() : $sender->getName();
-			$player->sendMessage(new TranslationContainer(TextFormat::GRAY . TextFormat::ITALIC . "%commands.message.display.incoming", [$name, $message]));
-			Command::broadcastCommandMessage($sender, new TranslationContainer("%commands.message.display.outgoing", [$player->getDisplayName(), $message]), false);
+			$player->sendMessage(new TranslationContainer(TextFormat::GRAY . TextFormat::ITALIC . "%" . KnownTranslationKeys::COMMANDS_MESSAGE_DISPLAY_INCOMING, [$name, $message]));
+			Command::broadcastCommandMessage($sender, new TranslationContainer(KnownTranslationKeys::COMMANDS_MESSAGE_DISPLAY_OUTGOING, [$player->getDisplayName(), $message]), false);
 		}else{
-			$sender->sendMessage(new TranslationContainer("commands.generic.player.notFound"));
+			$sender->sendMessage(new TranslationContainer(KnownTranslationKeys::COMMANDS_GENERIC_PLAYER_NOTFOUND));
 		}
 
 		return true;

@@ -7,8 +7,10 @@ namespace pocketmine\command\defaults;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\utils\InvalidCommandSyntaxException;
+use pocketmine\lang\KnownTranslationKeys;
 use pocketmine\lang\TranslationContainer;
 use pocketmine\math\Vector3;
+use pocketmine\permission\DefaultPermissionNames;
 use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
 use function count;
@@ -19,10 +21,10 @@ class SetWorldSpawnCommand extends VanillaCommand{
 	public function __construct(string $name){
 		parent::__construct(
 			$name,
-			"%pocketmine.command.setworldspawn.description",
-			"%commands.setworldspawn.usage"
+			"%" . KnownTranslationKeys::POCKETMINE_COMMAND_SETWORLDSPAWN_DESCRIPTION,
+			"%" . KnownTranslationKeys::COMMANDS_SETWORLDSPAWN_USAGE
 		);
-		$this->setPermission("pocketmine.command.setworldspawn");
+		$this->setPermission(DefaultPermissionNames::COMMAND_SETWORLDSPAWN);
 	}
 
 	public function execute(CommandSender $sender, string $commandLabel, array $args){
@@ -49,7 +51,7 @@ class SetWorldSpawnCommand extends VanillaCommand{
 
 		$world->setSpawnLocation($pos);
 
-		Command::broadcastCommandMessage($sender, new TranslationContainer("commands.setworldspawn.success", [round($pos->x, 2), round($pos->y, 2), round($pos->z, 2)]));
+		Command::broadcastCommandMessage($sender, new TranslationContainer(KnownTranslationKeys::COMMANDS_SETWORLDSPAWN_SUCCESS, [round($pos->x, 2), round($pos->y, 2), round($pos->z, 2)]));
 
 		return true;
 	}

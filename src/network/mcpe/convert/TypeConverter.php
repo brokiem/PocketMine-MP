@@ -20,6 +20,7 @@ use pocketmine\item\ItemFactory;
 use pocketmine\item\ItemIds;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\IntTag;
+use pocketmine\network\mcpe\InventoryManager;
 use pocketmine\network\mcpe\protocol\types\GameMode as ProtocolGameMode;
 use pocketmine\network\mcpe\protocol\types\inventory\ContainerIds;
 use pocketmine\network\mcpe\protocol\types\inventory\ItemStack;
@@ -221,7 +222,7 @@ class TypeConverter{
 	/**
 	 * @throws \UnexpectedValueException
 	 */
-	public function createInventoryAction(int $protocolId, NetworkInventoryAction $action, Player $player) : ?InventoryAction{
+	public function createInventoryAction(int $protocolId, NetworkInventoryAction $action, Player $player, InventoryManager $inventoryManager) : ?InventoryAction{
 		if($action->oldItem->getItemStack()->equals($action->newItem->getItemStack())){
 			//filter out useless noise in 1.13
 			return null;
@@ -257,7 +258,7 @@ class TypeConverter{
 					}
 					[$slot, $window] = $mapped;
 				}else{
-					$window = $player->getNetworkSession()->getInvManager()->getWindow($action->windowId);
+					$window = $inventoryManager->getWindow($action->windowId);
 					$slot = $action->inventorySlot;
 				}
 				if($window !== null){

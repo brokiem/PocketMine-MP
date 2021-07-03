@@ -15,6 +15,8 @@ class Potion extends Item implements ConsumableItem{
 		$this->potionType = $potionType;
 	}
 
+	public function getType() : PotionType{ return $this->potionType; }
+
 	public function getMaxStackSize() : int{
 		return 1;
 	}

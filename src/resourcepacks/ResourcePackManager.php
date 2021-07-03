@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace pocketmine\resourcepacks;
 
 use pocketmine\utils\Config;
+use Webmozart\PathUtil\Path;
 use function array_keys;
 use function copy;
 use function count;
@@ -44,11 +45,12 @@ class ResourcePackManager{
 			throw new \InvalidArgumentException("Resource packs path $path exists and is not a directory");
 		}
 
-		if(!file_exists($this->path . "resource_packs.yml")){
-			copy(\pocketmine\RESOURCE_PATH . "resource_packs.yml", $this->path . "resource_packs.yml");
+		$resourcePacksYml = Path::join($this->path, "resource_packs.yml");
+		if(!file_exists($resourcePacksYml)){
+			copy(Path::join(\pocketmine\RESOURCE_PATH, "resource_packs.yml"), $resourcePacksYml);
 		}
 
-		$resourcePacksConfig = new Config($this->path . "resource_packs.yml", Config::YAML, []);
+		$resourcePacksConfig = new Config($resourcePacksYml, Config::YAML, []);
 
 		$this->serverForceResources = (bool) $resourcePacksConfig->get("force_resources", false);
 
@@ -65,7 +67,7 @@ class ResourcePackManager{
 				continue;
 			}
 			try{
-				$packPath = $this->path . DIRECTORY_SEPARATOR . $pack;
+				$packPath = Path::join($this->path, $pack);
 				if(!file_exists($packPath)){
 					throw new ResourcePackException("File or directory not found");
 				}
@@ -101,7 +103,7 @@ class ResourcePackManager{
 	 * Returns the directory which resource packs are loaded from.
 	 */
 	public function getPath() : string{
-		return $this->path;
+		return $this->path . DIRECTORY_SEPARATOR;
 	}
 
 	/**

@@ -10,6 +10,7 @@ use pocketmine\network\mcpe\protocol\types\ItemTypeEntry;
 use pocketmine\player\Player;
 use pocketmine\utils\AssumptionFailedError;
 use pocketmine\utils\SingletonTrait;
+use Webmozart\PathUtil\Path;
 use function file_get_contents;
 use function is_array;
 use function is_bool;
@@ -29,7 +30,7 @@ final class GlobalItemTypeDictionary{
 		$dictionaries = [];
 
 		foreach ($paths as $protocolId => $path){
-			$data = file_get_contents(\pocketmine\RESOURCE_PATH . '/vanilla/required_item_list' . $path . '.json');
+			$data = file_get_contents(Path::join(\pocketmine\RESOURCE_PATH, 'vanilla', 'required_item_list' . $path . '.json'));
 			if($data === false) throw new AssumptionFailedError("Missing required resource file");
 			$table = json_decode($data, true);
 			if(!is_array($table)){
@@ -73,12 +74,12 @@ final class GlobalItemTypeDictionary{
 		$sortPlayers = [];
 
 		foreach($players as $player){
-			$mappingProtocol = self::getDictionaryProtocol($player->getNetworkSession()->getProtocolId());
+			$dictionaryProtocol = self::getDictionaryProtocol($player->getNetworkSession()->getProtocolId());
 
-			if(isset($sortPlayers[$mappingProtocol])){
-				$sortPlayers[$mappingProtocol][] = $player;
+			if(isset($sortPlayers[$dictionaryProtocol])){
+				$sortPlayers[$dictionaryProtocol][] = $player;
 			}else{
-				$sortPlayers[$mappingProtocol] = [$player];
+				$sortPlayers[$dictionaryProtocol] = [$player];
 			}
 		}
 

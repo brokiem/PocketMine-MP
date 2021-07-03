@@ -10,6 +10,7 @@ use pocketmine\block\UnknownBlock;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\command\CommandSender;
 use pocketmine\crafting\CraftingGrid;
+use pocketmine\data\java\GameModeIdMap;
 use pocketmine\entity\animation\Animation;
 use pocketmine\entity\animation\ArmSwingAnimation;
 use pocketmine\entity\animation\CriticalHitAnimation;
@@ -61,6 +62,7 @@ use pocketmine\item\enchantment\MeleeWeaponEnchantment;
 use pocketmine\item\Item;
 use pocketmine\item\ItemUseResult;
 use pocketmine\item\Releasable;
+use pocketmine\lang\KnownTranslationKeys;
 use pocketmine\lang\Language;
 use pocketmine\lang\TranslationContainer;
 use pocketmine\math\Vector3;
@@ -74,11 +76,13 @@ use pocketmine\network\mcpe\protocol\types\entity\EntityMetadataCollection;
 use pocketmine\network\mcpe\protocol\types\entity\EntityMetadataFlags;
 use pocketmine\network\mcpe\protocol\types\entity\EntityMetadataProperties;
 use pocketmine\network\mcpe\protocol\types\entity\PlayerMetadataFlags;
+use pocketmine\permission\DefaultPermissionNames;
 use pocketmine\permission\DefaultPermissions;
 use pocketmine\permission\PermissibleBase;
 use pocketmine\permission\PermissibleDelegateTrait;
 use pocketmine\Server;
 use pocketmine\timings\Timings;
+use pocketmine\utils\AssumptionFailedError;
 use pocketmine\utils\TextFormat;
 use pocketmine\world\ChunkListener;
 use pocketmine\world\ChunkListenerNoOpTrait;
@@ -288,9 +292,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 			return;
 		}
 
-		$this->perm->recalculatePermissions();
-
-		$this->server->getLogger()->info($this->getServer()->getLanguage()->translateString("pocketmine.player.logIn", [
+		$this->server->getLogger()->info($this->getServer()->getLanguage()->translateString(KnownTranslationKeys::POCKETMINE_PLAYER_LOGIN, [
 			TextFormat::AQUA . $this->username . TextFormat::WHITE,
 			$session->getIp(),
 			$session->getPort(),
@@ -316,7 +318,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 		$this->lastPlayed = $nbt->getLong("lastPlayed", $now);
 
 		if(!$this->server->getForceGamemode() and ($gameModeTag = $nbt->getTag("playerGameType")) instanceof IntTag){
-			$this->internalSetGameMode(GameMode::fromMagicNumber($gameModeTag->getValue() & 0x03)); //TODO: bad hack here to avoid crashes on corrupted data
+			$this->internalSetGameMode(GameModeIdMap::getInstance()->fromId($gameModeTag->getValue()) ?? GameMode::SURVIVAL()); //TODO: bad hack here to avoid crashes on corrupted data
 		}else{
 			$this->internalSetGameMode($this->server->getGamemode());
 		}
@@ -761,8 +763,11 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 	}
 
 	private function recheckBroadcastPermissions() : void{
-		foreach([Server::BROADCAST_CHANNEL_USERS, Server::BROADCAST_CHANNEL_ADMINISTRATIVE] as $channel){
-			if($this->hasPermission($channel)){
+		foreach([
+			DefaultPermissionNames::BROADCAST_ADMIN => Server::BROADCAST_CHANNEL_ADMINISTRATIVE,
+			DefaultPermissionNames::BROADCAST_USER => Server::BROADCAST_CHANNEL_USERS
+		] as $permission => $channel){
+			if($this->hasPermission($permission)){
 				$this->server->subscribeToBroadcastChannel($channel, $this);
 			}else{
 				$this->server->unsubscribeFromBroadcastChannel($channel, $this);
@@ -792,7 +797,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 			])
 		);
 		$ev->call();
-		if(strlen(trim((string) $ev->getJoinMessage())) > 0){
+		if($ev->getJoinMessage() !== ""){
 			$this->server->broadcastMessage($ev->getJoinMessage());
 		}
 
@@ -800,7 +805,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 
 		$this->spawnToAll();
 
-		if($this->server->getUpdater()->hasUpdate() and $this->hasPermission(Server::BROADCAST_CHANNEL_ADMINISTRATIVE) and $this->server->getConfigGroup()->getPropertyBool("auto-updater.on-update.warn-ops", true)){
+		if($this->server->getUpdater()->hasUpdate() and $this->hasPermission(DefaultPermissionNames::BROADCAST_ADMIN) and $this->server->getConfigGroup()->getPropertyBool("auto-updater.on-update.warn-ops", true)){
 			$this->server->getUpdater()->showPlayerUpdate($this);
 		}
 
@@ -2003,11 +2008,15 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 				$this->unloadChunk($chunkX, $chunkZ);
 			}
 		}
-		$this->usedChunks = [];
+		if(count($this->usedChunks) !== 0){
+			throw new AssumptionFailedError("Previous loop should have cleared this array");
+		}
 		$this->loadQueue = [];
 
 		$this->removeCurrentWindow();
 		$this->removePermanentInventories();
+
+		$this->perm->getPermissionRecalculationCallbacks()->clear();
 
 		$this->flagForDespawn();
 	}
@@ -2065,7 +2074,7 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 			$nbt->setInt("SpawnZ", $spawn->getFloorZ());
 		}
 
-		$nbt->setInt("playerGameType", $this->gamemode->getMagicNumber());
+		$nbt->setInt("playerGameType", GameModeIdMap::getInstance()->toId($this->gamemode));
 		$nbt->setLong("firstPlayed", $this->firstPlayed);
 		$nbt->setLong("lastPlayed", (int) floor(microtime(true) * 1000));
 
@@ -2341,8 +2350,11 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 		//TODO: client side race condition here makes the opening work incorrectly
 		$this->removeCurrentWindow();
 
+		if(($inventoryManager = $this->getNetworkSession()->getInvManager()) === null){
+			throw new \InvalidArgumentException("Player cannot open inventories in this state");
+		}
 		$this->logger->debug("Opening inventory " . get_class($inventory) . "#" . spl_object_id($inventory));
-		$this->getNetworkSession()->getInvManager()->onCurrentWindowChange($inventory);
+		$inventoryManager->onCurrentWindowChange($inventory);
 		$inventory->onOpen($this);
 		$this->currentWindow = $inventory;
 		return true;
@@ -2354,8 +2366,8 @@ class Player extends Human implements CommandSender, ChunkListener, IPlayer{
 
 			$this->logger->debug("Closing inventory " . get_class($this->currentWindow) . "#" . spl_object_id($this->currentWindow));
 			$this->currentWindow->onClose($this);
-			if($this->isConnected()){
-				$this->getNetworkSession()->getInvManager()->onCurrentWindowRemove();
+			if(($inventoryManager = $this->getNetworkSession()->getInvManager()) !== null){
+				$inventoryManager->onCurrentWindowRemove();
 			}
 			$this->currentWindow = null;
 		}

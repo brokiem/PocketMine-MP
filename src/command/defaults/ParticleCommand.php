@@ -10,8 +10,10 @@ use pocketmine\command\CommandSender;
 use pocketmine\command\utils\InvalidCommandSyntaxException;
 use pocketmine\item\ItemFactory;
 use pocketmine\item\VanillaItems;
+use pocketmine\lang\KnownTranslationKeys;
 use pocketmine\lang\TranslationContainer;
 use pocketmine\math\Vector3;
+use pocketmine\permission\DefaultPermissionNames;
 use pocketmine\player\Player;
 use pocketmine\utils\Random;
 use pocketmine\utils\TextFormat;
@@ -57,10 +59,10 @@ class ParticleCommand extends VanillaCommand{
 	public function __construct(string $name){
 		parent::__construct(
 			$name,
-			"%pocketmine.command.particle.description",
-			"%pocketmine.command.particle.usage"
+			"%" . KnownTranslationKeys::POCKETMINE_COMMAND_PARTICLE_DESCRIPTION,
+			"%" . KnownTranslationKeys::POCKETMINE_COMMAND_PARTICLE_USAGE
 		);
-		$this->setPermission("pocketmine.command.particle");
+		$this->setPermission(DefaultPermissionNames::COMMAND_PARTICLE);
 	}
 
 	public function execute(CommandSender $sender, string $commandLabel, array $args){
@@ -98,11 +100,11 @@ class ParticleCommand extends VanillaCommand{
 		$particle = $this->getParticle($name, $data);
 
 		if($particle === null){
-			$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%commands.particle.notFound", [$name]));
+			$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%" . KnownTranslationKeys::COMMANDS_PARTICLE_NOTFOUND, [$name]));
 			return true;
 		}
 
-		$sender->sendMessage(new TranslationContainer("commands.particle.success", [$name, $count]));
+		$sender->sendMessage(new TranslationContainer(KnownTranslationKeys::COMMANDS_PARTICLE_SUCCESS, [$name, $count]));
 
 		$random = new Random((int) (microtime(true) * 1000) + mt_rand());
 

@@ -7,7 +7,9 @@ namespace pocketmine\command\defaults;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\utils\InvalidCommandSyntaxException;
+use pocketmine\lang\KnownTranslationKeys;
 use pocketmine\lang\TranslationContainer;
+use pocketmine\permission\DefaultPermissionNames;
 use pocketmine\player\GameMode;
 use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
@@ -18,10 +20,10 @@ class GamemodeCommand extends VanillaCommand{
 	public function __construct(string $name){
 		parent::__construct(
 			$name,
-			"%pocketmine.command.gamemode.description",
-			"%commands.gamemode.usage"
+			"%" . KnownTranslationKeys::POCKETMINE_COMMAND_GAMEMODE_DESCRIPTION,
+			"%" . KnownTranslationKeys::COMMANDS_GAMEMODE_USAGE
 		);
-		$this->setPermission("pocketmine.command.gamemode");
+		$this->setPermission(DefaultPermissionNames::COMMAND_GAMEMODE);
 	}
 
 	public function execute(CommandSender $sender, string $commandLabel, array $args){
@@ -33,9 +35,8 @@ class GamemodeCommand extends VanillaCommand{
 			throw new InvalidCommandSyntaxException();
 		}
 
-		try{
-			$gameMode = GameMode::fromString($args[0]);
-		}catch(\InvalidArgumentException $e){
+		$gameMode = GameMode::fromString($args[0]);
+		if($gameMode === null){
 			$sender->sendMessage("Unknown game mode");
 			return true;
 		}
@@ -43,7 +44,7 @@ class GamemodeCommand extends VanillaCommand{
 		if(isset($args[1])){
 			$target = $sender->getServer()->getPlayerByPrefix($args[1]);
 			if($target === null){
-				$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%commands.generic.player.notFound"));
+				$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%" . KnownTranslationKeys::COMMANDS_GENERIC_PLAYER_NOTFOUND));
 
 				return true;
 			}
@@ -58,10 +59,10 @@ class GamemodeCommand extends VanillaCommand{
 			$sender->sendMessage("Game mode change for " . $target->getName() . " failed!");
 		}else{
 			if($target === $sender){
-				Command::broadcastCommandMessage($sender, new TranslationContainer("commands.gamemode.success.self", [$gameMode->getTranslationKey()]));
+				Command::broadcastCommandMessage($sender, new TranslationContainer(KnownTranslationKeys::COMMANDS_GAMEMODE_SUCCESS_SELF, [$gameMode->getTranslationKey()]));
 			}else{
-				$target->sendMessage(new TranslationContainer("gameMode.changed", [$gameMode->getTranslationKey()]));
-				Command::broadcastCommandMessage($sender, new TranslationContainer("commands.gamemode.success.other", [$gameMode->getTranslationKey(), $target->getName()]));
+				$target->sendMessage(new TranslationContainer(KnownTranslationKeys::GAMEMODE_CHANGED, [$gameMode->getTranslationKey()]));
+				Command::broadcastCommandMessage($sender, new TranslationContainer(KnownTranslationKeys::COMMANDS_GAMEMODE_SUCCESS_OTHER, [$gameMode->getTranslationKey(), $target->getName()]));
 			}
 		}
 

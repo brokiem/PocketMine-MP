@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace pocketmine\command;
+namespace pocketmine\console;
 
 use function fclose;
 use function fgets;
@@ -12,7 +12,7 @@ use function stream_select;
 use function trim;
 use function usleep;
 
-final class CommandReader{
+final class ConsoleReader{
 	/** @var resource */
 	private $stdin;
 

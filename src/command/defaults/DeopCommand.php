@@ -7,7 +7,9 @@ namespace pocketmine\command\defaults;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\utils\InvalidCommandSyntaxException;
+use pocketmine\lang\KnownTranslationKeys;
 use pocketmine\lang\TranslationContainer;
+use pocketmine\permission\DefaultPermissionNames;
 use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
 use function array_shift;
@@ -18,10 +20,10 @@ class DeopCommand extends VanillaCommand{
 	public function __construct(string $name){
 		parent::__construct(
 			$name,
-			"%pocketmine.command.deop.description",
-			"%commands.deop.usage"
+			"%" . KnownTranslationKeys::POCKETMINE_COMMAND_DEOP_DESCRIPTION,
+			"%" . KnownTranslationKeys::COMMANDS_DEOP_USAGE
 		);
-		$this->setPermission("pocketmine.command.op.take");
+		$this->setPermission(DefaultPermissionNames::COMMAND_OP_TAKE);
 	}
 
 	public function execute(CommandSender $sender, string $commandLabel, array $args){
@@ -42,7 +44,7 @@ class DeopCommand extends VanillaCommand{
 		if(($player = $sender->getServer()->getPlayerExact($name)) !== null){
 			$player->sendMessage(TextFormat::GRAY . "You are no longer op!");
 		}
-		Command::broadcastCommandMessage($sender, new TranslationContainer("commands.deop.success", [$name]));
+		Command::broadcastCommandMessage($sender, new TranslationContainer(KnownTranslationKeys::COMMANDS_DEOP_SUCCESS, [$name]));
 
 		return true;
 	}

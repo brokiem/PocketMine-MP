@@ -8,7 +8,9 @@ use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\utils\InvalidCommandSyntaxException;
 use pocketmine\entity\Location;
+use pocketmine\lang\KnownTranslationKeys;
 use pocketmine\lang\TranslationContainer;
+use pocketmine\permission\DefaultPermissionNames;
 use pocketmine\player\Player;
 use pocketmine\utils\AssumptionFailedError;
 use pocketmine\utils\TextFormat;
@@ -21,11 +23,11 @@ class TeleportCommand extends VanillaCommand{
 	public function __construct(string $name){
 		parent::__construct(
 			$name,
-			"%pocketmine.command.tp.description",
-			"%commands.tp.usage",
+			"%" . KnownTranslationKeys::POCKETMINE_COMMAND_TP_DESCRIPTION,
+			"%" . KnownTranslationKeys::COMMANDS_TP_USAGE,
 			["teleport"]
 		);
-		$this->setPermission("pocketmine.command.teleport");
+		$this->setPermission(DefaultPermissionNames::COMMAND_TELEPORT);
 	}
 
 	private function findPlayer(CommandSender $sender, string $playerName) : ?Player{
@@ -76,7 +78,7 @@ class TeleportCommand extends VanillaCommand{
 				}
 
 				$subject->teleport($targetPlayer->getLocation());
-				Command::broadcastCommandMessage($sender, new TranslationContainer("commands.tp.success", [$subject->getName(), $targetPlayer->getName()]));
+				Command::broadcastCommandMessage($sender, new TranslationContainer(KnownTranslationKeys::COMMANDS_TP_SUCCESS, [$subject->getName(), $targetPlayer->getName()]));
 
 				return true;
 			case 3:
@@ -96,7 +98,7 @@ class TeleportCommand extends VanillaCommand{
 				$targetLocation = new Location($x, $y, $z, $yaw, $pitch, $base->getWorld());
 
 				$subject->teleport($targetLocation);
-				Command::broadcastCommandMessage($sender, new TranslationContainer("commands.tp.success.coordinates", [
+				Command::broadcastCommandMessage($sender, new TranslationContainer(KnownTranslationKeys::COMMANDS_TP_SUCCESS_COORDINATES, [
 					$subject->getName(),
 					round($targetLocation->x, 2),
 					round($targetLocation->y, 2),

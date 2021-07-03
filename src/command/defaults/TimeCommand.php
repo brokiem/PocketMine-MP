@@ -7,31 +7,43 @@ namespace pocketmine\command\defaults;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\utils\InvalidCommandSyntaxException;
+use pocketmine\lang\KnownTranslationKeys;
 use pocketmine\lang\TranslationContainer;
+use pocketmine\permission\DefaultPermissionNames;
 use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
 use pocketmine\world\World;
 use function count;
+use function implode;
 
 class TimeCommand extends VanillaCommand{
 
 	public function __construct(string $name){
 		parent::__construct(
 			$name,
-			"%pocketmine.command.time.description",
-			"%pocketmine.command.time.usage"
+			"%" . KnownTranslationKeys::POCKETMINE_COMMAND_TIME_DESCRIPTION,
+			"%" . KnownTranslationKeys::POCKETMINE_COMMAND_TIME_USAGE
 		);
-		$this->setPermission("pocketmine.command.time.add;pocketmine.command.time.set;pocketmine.command.time.start;pocketmine.command.time.stop");
+		$this->setPermission(implode(";", [
+			DefaultPermissionNames::COMMAND_TIME_ADD,
+			DefaultPermissionNames::COMMAND_TIME_SET,
+			DefaultPermissionNames::COMMAND_TIME_START,
+			DefaultPermissionNames::COMMAND_TIME_STOP,
+			DefaultPermissionNames::COMMAND_TIME_QUERY
+		]));
 	}
 
 	public function execute(CommandSender $sender, string $commandLabel, array $args){
+		if(!$this->testPermission($sender)){
+			return true;
+		}
 		if(count($args) < 1){
 			throw new InvalidCommandSyntaxException();
 		}
 
 		if($args[0] === "start"){
-			if(!$sender->hasPermission("pocketmine.command.time.start")){
-				$sender->sendMessage($sender->getLanguage()->translateString(TextFormat::RED . "%commands.generic.permission"));
+			if(!$sender->hasPermission(DefaultPermissionNames::COMMAND_TIME_START)){
+				$sender->sendMessage($sender->getLanguage()->translateString(TextFormat::RED . "%" . KnownTranslationKeys::COMMANDS_GENERIC_PERMISSION));
 
 				return true;
 			}
@@ -41,8 +53,8 @@ class TimeCommand extends VanillaCommand{
 			Command::broadcastCommandMessage($sender, "Restarted the time");
 			return true;
 		}elseif($args[0] === "stop"){
-			if(!$sender->hasPermission("pocketmine.command.time.stop")){
-				$sender->sendMessage($sender->getLanguage()->translateString(TextFormat::RED . "%commands.generic.permission"));
+			if(!$sender->hasPermission(DefaultPermissionNames::COMMAND_TIME_STOP)){
+				$sender->sendMessage($sender->getLanguage()->translateString(TextFormat::RED . "%" . KnownTranslationKeys::COMMANDS_GENERIC_PERMISSION));
 
 				return true;
 			}
@@ -52,8 +64,8 @@ class TimeCommand extends VanillaCommand{
 			Command::broadcastCommandMessage($sender, "Stopped the time");
 			return true;
 		}elseif($args[0] === "query"){
-			if(!$sender->hasPermission("pocketmine.command.time.query")){
-				$sender->sendMessage($sender->getLanguage()->translateString(TextFormat::RED . "%commands.generic.permission"));
+			if(!$sender->hasPermission(DefaultPermissionNames::COMMAND_TIME_QUERY)){
+				$sender->sendMessage($sender->getLanguage()->translateString(TextFormat::RED . "%" . KnownTranslationKeys::COMMANDS_GENERIC_PERMISSION));
 
 				return true;
 			}
@@ -62,7 +74,7 @@ class TimeCommand extends VanillaCommand{
 			}else{
 				$world = $sender->getServer()->getWorldManager()->getDefaultWorld();
 			}
-			$sender->sendMessage($sender->getLanguage()->translateString("commands.time.query", [$world->getTime()]));
+			$sender->sendMessage($sender->getLanguage()->translateString(KnownTranslationKeys::COMMANDS_TIME_QUERY, [$world->getTime()]));
 			return true;
 		}
 
@@ -71,8 +83,8 @@ class TimeCommand extends VanillaCommand{
 		}
 
 		if($args[0] === "set"){
-			if(!$sender->hasPermission("pocketmine.command.time.set")){
-				$sender->sendMessage($sender->getLanguage()->translateString(TextFormat::RED . "%commands.generic.permission"));
+			if(!$sender->hasPermission(DefaultPermissionNames::COMMAND_TIME_SET)){
+				$sender->sendMessage($sender->getLanguage()->translateString(TextFormat::RED . "%" . KnownTranslationKeys::COMMANDS_GENERIC_PERMISSION));
 
 				return true;
 			}
@@ -104,10 +116,10 @@ class TimeCommand extends VanillaCommand{
 			foreach($sender->getServer()->getWorldManager()->getWorlds() as $world){
 				$world->setTime($value);
 			}
-			Command::broadcastCommandMessage($sender, new TranslationContainer("commands.time.set", [$value]));
+			Command::broadcastCommandMessage($sender, new TranslationContainer(KnownTranslationKeys::COMMANDS_TIME_SET, [$value]));
 		}elseif($args[0] === "add"){
-			if(!$sender->hasPermission("pocketmine.command.time.add")){
-				$sender->sendMessage($sender->getLanguage()->translateString(TextFormat::RED . "%commands.generic.permission"));
+			if(!$sender->hasPermission(DefaultPermissionNames::COMMAND_TIME_ADD)){
+				$sender->sendMessage($sender->getLanguage()->translateString(TextFormat::RED . "%" . KnownTranslationKeys::COMMANDS_GENERIC_PERMISSION));
 
 				return true;
 			}
@@ -116,7 +128,7 @@ class TimeCommand extends VanillaCommand{
 			foreach($sender->getServer()->getWorldManager()->getWorlds() as $world){
 				$world->setTime($world->getTime() + $value);
 			}
-			Command::broadcastCommandMessage($sender, new TranslationContainer("commands.time.added", [$value]));
+			Command::broadcastCommandMessage($sender, new TranslationContainer(KnownTranslationKeys::COMMANDS_TIME_ADDED, [$value]));
 		}else{
 			throw new InvalidCommandSyntaxException();
 		}

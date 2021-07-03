@@ -16,6 +16,7 @@ use pocketmine\event\player\SessionDisconnectEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\form\Form;
+use pocketmine\lang\KnownTranslationKeys;
 use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\tag\StringTag;
@@ -115,7 +116,7 @@ class NetworkSession{
 	private NetworkSessionManager $manager;
 	private string $ip;
 	private int $port;
-	private ?PlayerInfo $info = null;
+	protected ?PlayerInfo $info = null;
 	protected ?int $ping = null;
 
 	private ?PacketHandler $handler = null;
@@ -575,7 +576,7 @@ class NetworkSession{
 		}
 
 		if($error !== null){
-			$this->disconnect($this->server->getLanguage()->translateString("pocketmine.disconnect.invalidSession", [$error]));
+			$this->disconnect($this->server->getLanguage()->translateString(KnownTranslationKeys::POCKETMINE_DISCONNECT_INVALIDSESSION, [$error]));
 
 			return;
 		}
@@ -675,7 +676,7 @@ class NetworkSession{
 	}
 
 	private function beginSpawnSequence() : void{
-		$this->setHandler(new PreSpawnPacketHandler($this->server, $this->player, $this));
+		$this->setHandler(new PreSpawnPacketHandler($this->server, $this->player, $this, $this->invManager));
 		$this->player->setImmobile(); //TODO: HACK: fix client-side falling pre-spawn
 
 		$this->logger->debug("Waiting for chunk radius request");
@@ -694,7 +695,7 @@ class NetworkSession{
 		$this->player->setImmobile(false); //TODO: HACK: we set this during the spawn sequence to prevent the client sending junk movements
 		$this->player->doFirstSpawn();
 		$this->forceAsyncCompression = false;
-		$this->setHandler(new InGamePacketHandler($this->player, $this));
+		$this->setHandler(new InGamePacketHandler($this->player, $this, $this->invManager));
 	}
 
 	public function onServerDeath() : void{
@@ -708,7 +709,7 @@ class NetworkSession{
 
 		$this->syncAdventureSettings($this->player);
 		$this->invManager->syncAll();
-		$this->setHandler(new InGamePacketHandler($this->player, $this));
+		$this->setHandler(new InGamePacketHandler($this->player, $this, $this->invManager));
 	}
 
 	public function syncMovement(Vector3 $pos, ?float $yaw = null, ?float $pitch = null, int $mode = MovePlayerPacket::MODE_NORMAL) : void{
@@ -749,9 +750,12 @@ class NetworkSession{
 
 	public function syncGameMode(GameMode $mode, bool $isRollback = false) : void{
 		$this->sendDataPacket(SetPlayerGameTypePacket::create(TypeConverter::getInstance()->coreGameModeToProtocol($mode)));
-		$this->syncAdventureSettings($this->player);
-		if(!$isRollback){
-			$this->invManager->syncCreative();
+		if($this->player !== null){
+			$this->syncAdventureSettings($this->player);
+
+			if(!$isRollback){
+				$this->invManager->syncCreative();
+			}
 		}
 	}
 
@@ -940,7 +944,7 @@ class NetworkSession{
 		$this->sendDataPacket(SetDifficultyPacket::create($worldDifficulty));
 	}
 
-	public function getInvManager() : InventoryManager{
+	public function getInvManager() : ?InventoryManager{
 		return $this->invManager;
 	}
 
